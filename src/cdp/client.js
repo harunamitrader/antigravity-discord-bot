@@ -138,3 +138,14 @@ export async function ensureCDP(channelId = 'default') {
 export function getCdpConnection(channelId = 'default') {
     return connections.get(channelId);
 }
+
+export function closeCdpConnection(channelId) {
+    if (connections.has(channelId)) {
+        const conn = connections.get(channelId);
+        if (conn.ws && conn.ws.readyState === WebSocket.OPEN) {
+            conn.ws.close();
+        }
+        connections.delete(channelId);
+        logInteraction('CDP', `Connection closed manually for channel: ${channelId}`);
+    }
+}

@@ -19,6 +19,14 @@ export function saveWorkspace(channelId, targetUrl) {
     fs.writeFileSync(WORKSPACES_FILE, JSON.stringify(data, null, 2));
 }
 
+export function removeWorkspace(channelId) {
+    const data = loadWorkspaces();
+    if (data[channelId]) {
+        delete data[channelId];
+        fs.writeFileSync(WORKSPACES_FILE, JSON.stringify(data, null, 2));
+    }
+}
+
 export async function handleWorkspaceCommand(interaction) {
     const subCommand = interaction.options.getSubcommand();
 

@@ -7,7 +7,7 @@ import { stdin as input, stdout as output } from 'process';
 import { ensureCDP } from './cdp/client.js';
 import { setupFileWatcher, setFileWatcherConfig } from './services/fileWatcher.js';
 import { commands } from './discord/commands.js';
-import { handleInteraction, handleMessageCreate, handleThreadCreate } from './discord/events.js';
+import { handleInteraction, handleMessageCreate, handleThreadCreate, handleChannelDelete } from './discord/events.js';
 import { initSchedules } from './discord/commands/schedule.js';
 
 const client = new Client({
@@ -101,6 +101,14 @@ client.on('messageCreate', async message => {
 
 client.on('threadCreate', async (thread, newlyCreated) => {
     await handleThreadCreate(thread, newlyCreated, ensureCDP);
+});
+
+client.on('channelDelete', async channel => {
+    await handleChannelDelete(channel);
+});
+
+client.on('threadDelete', async thread => {
+    await handleChannelDelete(thread);
 });
 
 (async () => {

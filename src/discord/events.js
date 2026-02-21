@@ -3,10 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { getScreenshot, stopGeneration, injectMessage } from '../cdp/operations.js';
 import { startNewChat, getCurrentTitle, getCurrentModel, getModelList, switchModel, getCurrentMode, switchMode } from '../cdp/workspace.js';
-import { setIsGenerating, monitorAIResponse } from '../services/aiMonitor.js';
+import { setIsGenerating, stopMonitoring, monitorAIResponse } from '../services/aiMonitor.js';
 import { handleTemplateCommand } from './commands/template.js';
 import { handleScheduleCommand } from './commands/schedule.js';
-import { handleWorkspaceCommand, loadWorkspaces, saveWorkspace } from './commands/workspace.js';
+import { handleWorkspaceCommand, loadWorkspaces, saveWorkspace, removeWorkspace } from './commands/workspace.js';
+import { getCdpConnection, closeCdpConnection } from '../cdp/client.js';
 import { logInteraction } from '../utils/logger.js';
 import { createInfoEmbed } from '../utils/embeds.js';
 import { downloadFile } from '../utils/network.js';
@@ -50,7 +51,7 @@ export async function handleInteraction(interaction, cdp) {
     if (commandName === 'stop') {
         const stopped = await stopGeneration(cdp);
         if (stopped) {
-            setIsGenerating(false);
+            setIsGenerating(interaction.channelId, false);
             return interaction.reply({ content: '⏹️ 生成を停止しました。' });
         } else {
             return interaction.reply({ content: '⚠️ 現在生成中ではありません。', ephemeral: true });
@@ -60,7 +61,7 @@ export async function handleInteraction(interaction, cdp) {
     if (commandName === 'newchat') {
         const started = await startNewChat(cdp);
         if (started) {
-            setIsGenerating(false);
+            setIsGenerating(interaction.channelId, false);
             return interaction.reply({ content: '🆕 新規チャットを開始しました。' });
         } else {
             return interaction.reply({ content: '⚠️ New Chatボタンが見つかりませんでした。', ephemeral: true });
@@ -194,4 +195,18 @@ export async function handleThreadCreate(thread, newlyCreated, ensureCDP) {
             await thread.send({ embeds: [createInfoEmbed('スレッド同期', 'Antigravity側でも新しいチャットを開始しました。')] });
         }
     }
+}
+
+export async function handleChannelDelete(channel) {
+    const channelId = channel.id;
+    logInteraction('CHANNEL_DELETE', `Channel/Thread deleted: ${channelId}. Cleaning up resources...`);
+
+    // Stop any active AI monitoring loop for this channel
+    stopMonitoring(channelId);
+
+    // Close WebSocket connection if it exists specifically for this channel
+    closeCdpConnection(channelId);
+
+    // Remove from workspaces.json mapping
+    removeWorkspace(channelId);
 }
