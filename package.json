@@ -4,13 +4,14 @@
     "type": "module",
     "description": "Mobile web interface for monitoring Antigravity chat via visual snapshots",
     "scripts": {
-        "start": "node discord_bot.js",
-        "dev": "node discord_bot.js"
+        "start": "node src/index.js",
+        "dev": "node src/index.js"
     },
     "dependencies": {
         "chokidar": "^5.0.0",
         "discord.js": "^14.25.1",
         "dotenv": "^16.6.1",
+        "node-schedule": "^2.1.1",
         "ws": "^8.18.0"
     },
     "author": "Krishna Kanth B (krishnakanthb13)",
