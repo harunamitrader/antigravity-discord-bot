@@ -42,6 +42,15 @@ Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にア
 >
 > v1.3では、Discord上のボタンがAntigravity側のボタン名（Run, Allow Onceなど）をそのまま反映するようになりました。また、`rm -rf /` 等の危険なコマンドは自動承認モードでもブロックされ、手動承認が求められます。
 
+## おすすめの導入方法
+
+antigravityのAIチャットに以下のプロンプトを入力してください。
+「https://github.com/harunamitrader/antigravity-discord-bot を導入して。可能な範囲でAI側で作業を行い、必要な情報があれば質問して。手動で行う必要があるものは丁寧にやり方を教えて。」
+
+導入が完了したら、
+「デバッグモード用ショートカットとantigravity-discord-botの起動用ショートカットをデスクトップに作成して」
+も必要に応じてプロンプトを送信しても良いかもしれません。
+
 ## 🚀 主な機能
 
 1.  **テキスト生成**: DiscordメッセージをそのままAntigravityに転送し、生成を開始します。
