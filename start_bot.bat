@@ -1,11 +1,21 @@
 @echo off
-title Antigravity Bot: Starting...
+title Antigravity Bot
 cd /d "%~dp0"
-echo Starting Antigravity Discord Bot...
-echo [INFO] Press Ctrl+C to stop.
-node discord_bot.js
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Bot crashed or stopped with error.
-    pause
+
+:loop
+echo ========================================
+echo  Starting Antigravity Discord Bot...
+echo  Press Ctrl+C to stop.
+echo ========================================
+node discord_bot.js %*
+
+if %ERRORLEVEL% EQU 42 (
+    echo.
+    echo [RESTART] Restarting in 3 seconds...
+    timeout /t 3 /nobreak >nul
+    goto loop
 )
+
+echo.
+echo [STOPPED] Bot stopped. (exit code: %ERRORLEVEL%)
 pause

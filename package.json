@@ -1,8 +1,8 @@
 {
-    "name": "ag-mobile-monitor",
-    "version": "1.0.0",
+    "name": "antigravity-discord-bot",
+    "version": "1.5.0",
     "type": "module",
-    "description": "Mobile web interface for monitoring Antigravity chat via visual snapshots",
+    "description": "Discord bot to control Antigravity (VS Code Fork) via Chrome DevTools Protocol",
     "scripts": {
         "start": "node discord_bot.js",
         "dev": "node discord_bot.js"
@@ -14,9 +14,9 @@
         "dotenv": "^16.6.1",
         "ws": "^8.18.0"
     },
-    "author": "Krishna Kanth B (krishnakanthb13)",
-    "license": "GPL-3.0-only",
+    "author": "harunamitrader",
+    "license": "MIT",
     "engines": {
-        "node": ">=16.0.0"
+        "node": ">=18.0.0"
     }
 }

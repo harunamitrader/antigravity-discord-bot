@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.5.0 (2026-03-07)
+
+### 新機能
+- **`/restart` コマンド**: DiscordからBotプロセスを再起動できるようになりました。`start_bot.bat` 経由で起動している場合、exit code `42` を検知し3秒後に自動再起動します
+- **起動完了通知**: Bot起動完了時にDiscordへ「✅ Bot 起動完了」メッセージを送信するようになりました
+- **通知チャンネル個別指定** (オプション):
+  - `DISCORD_CHAT_CHANNEL_ID`: チャット通知・起動完了メッセージの送信先チャンネル
+  - `DISCORD_FILE_LOG_CHANNEL_ID`: ファイル変更通知の送信先チャンネル
+  - いずれも未設定時は従来通り `lastActiveChannel` に送信
+
+### 改善
+- **コード分割**: `discord_bot.js`（3466行）を9つのサブモジュール（`src/`）に分割し、約450行に縮小
+- **`/model` コマンドの改善**: ドロップダウン検出を `aria-haspopup="dialog"` ベースに変更。ドロップダウンが開きっぱなしになる問題を、同一ボタン再クリック + Escキーの二重安全策で修正
+- **`/conversation` コマンドの改善**: `/model` と同じパターンに統一し、ドロップダウン閉じ忘れを防止
+- **`start_bot.bat` のループ化**: `/restart` コマンド対応。exit code `42` で再起動、それ以外で完全停止
+
+### 整理
+- デバッグ用スクリプト12ファイルを `debug/` フォルダに移動（`.gitignore` で除外済み）
+- デバッグ出力ファイル14ファイルをリポジトリルートから除去
+
+### 変更されたファイル
+| ファイル | 主な変更 |
+|---|---|
+| `discord_bot.js` | モジュール化によるimport構成へ書き換え、`/restart`コマンド追加、起動完了通知追加 |
+| `src/*.js` (9ファイル) | 新規作成: config, state, text_processing, logging, cdp_manager, discord_helpers, dom_operations, file_watcher, monitor |
+| `start_bot.bat` | ループ化（exit code 42 で再起動対応） |
+| `.env.example` | `DISCORD_CHAT_CHANNEL_ID`, `DISCORD_FILE_LOG_CHANNEL_ID` 追加 |
+
+---
+
 ## v1.4.0 (2026-03-03)
 
 ### 新機能・改善

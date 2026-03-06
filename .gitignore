@@ -31,3 +31,6 @@ url_full_list.txt
 workspace/**
 !workspace/.gitkeep
 !workspace/**/.gitkeep
+
+# バックアップファイル
+*.bak

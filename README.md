@@ -54,6 +54,9 @@ Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にア
 11. **最終レスポンス取得**: `/last_response` コマンドで直前のAI回答を再取得できます。
 12. **ファイル監視**: プロジェクトディレクトリ内のファイル変更を検知し、Discordに通知します。
 13. **ウィンドウ管理**: `/window` コマンドで現在の接続先ウィンドウの確認や切り替えができます。
+14. **Bot再起動**: `/restart` コマンドでBotプロセスを再起動できます（`start_bot.bat` 経由で起動している場合）。
+15. **起動完了通知**: Bot起動完了時にDiscordへ通知メッセージを送信します。
+16. **チャンネル指定**: チャット通知とファイルログ通知の送信先チャンネルを `.env` で個別に指定できます（オプション）。
 
 ## 🛠️ 事前準備 (Discord Botの作成)
 
@@ -132,6 +135,7 @@ Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にア
    ```bash
    node discord_bot.js
    ```
+   または `start_bot.bat` をダブルクリックして起動（`/restart` コマンドによる自動再起動に対応）。
 
 ## 📖 コマンド一覧
 
@@ -149,6 +153,7 @@ Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にア
 | `/last_response` | 直前のAI回答を再取得 |
 | `/window` | 出力可能なウィンドウの一覧を表示 |
 | `/window number:<番号>` | 指定したウィンドウに切り替える |
+| `/restart` | Botプロセスを再起動（`start_bot.bat` 経由起動時のみ自動再起動） |
 
 ## 🛠️ 技術仕様
 

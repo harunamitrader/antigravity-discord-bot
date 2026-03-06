@@ -16,6 +16,24 @@ graph LR
     DiscordBot -- Reply --> User
 ```
 
+### モジュール構成
+```
+antgravity-discord-bot/
+├── discord_bot.js        # メインエントリポイント
+├── selectors.js          # CSSセレクター・キーワード定義
+├── start_bot.bat         # Windows起動スクリプト（/restart対応ループ）
+└── src/
+    ├── config.js             # 設定・定数・CLI引数
+    ├── state.js              # グローバル状態管理
+    ├── text_processing.js    # テキスト処理・サニタイズ
+    ├── logging.js            # ログ記録
+    ├── cdp_manager.js        # CDP接続管理
+    ├── discord_helpers.js    # Discordユーティリティ
+    ├── dom_operations.js     # DOM操作（メッセージ注入・モデル/モード切替等）
+    ├── file_watcher.js       # ファイル監視
+    └── monitor.js            # AI応答監視・承認フロー
+```
+
 ### 主要コンポーネント
 - **CDP (Chrome DevTools Protocol)**: AntigravityのメインドキュメントのDOMにアクセスし、ボタンクリックやテキスト取得を行います。
 - **Chokidar**: ファイルシステムの変更を監視し、Antigravityが生成したファイルや変更を検知してDiscordに通知します。
@@ -47,20 +65,26 @@ graph LR
 ### 3.3 モデル切替 (`/model`)
 - AntigravityのUI上にあるモデル選択ドロップダウンを操作します。
 - **DOM操作**:
-  1. `<button aria-expanded="false">` をクリックしてドロップダウンを展開。
-  2. ドロップダウン内のモデル名リストを取得。
-  3. 指定されたモデル名の要素をクリック。
+  1. `.antigravity-agent-side-panel` 内の `div[role="button"][aria-haspopup="dialog"]` でモデル名を含むボタンを検出。
+  2. クリックして `div[role="dialog"]` 内の `span.text-xs.font-medium` からモデル一覧を取得。
+  3. 指定モデルをクリック、または同一ボタン再クリック + Escキーで確実にドロップダウンを閉じる。
 
 ### 3.4 モード切替 (`/conversation`)
 - Planning Mode / Fast Mode の切替を行います。
 - **DOM操作**:
-  1. モード切替トグルをクリック。
-  2. ダイアログ内の "Planning" または "Fast" をクリック。
+  1. `.antigravity-agent-side-panel` 内の `div[role="button"][aria-haspopup="dialog"]` で "Planning" または "Fast" テキストを含むボタンを検出。
+  2. クリックして `div[role="dialog"]` 内の `div.font-medium` から対象モードをクリック。
+  3. 見つからない場合は同一ボタン再クリック + Escキーでドロップダウンを閉じる。
 
-### 3.5 ウィンドウ管理 (`/window`)
+### 3.5 Bot再起動 (`/restart`)
+- Botプロセスを exit code `42` で終了します。
+- `start_bot.bat` のループ処理が exit code `42` を検知し、3秒後に自動再起動します。
+- それ以外の exit code（Ctrl+C, エラー等）では完全停止します。
+
+### 3.6 ウィンドウ管理 (`/window`)
 - CDPで接続可能なAntigravity（VS Code）のウィンドウ一覧表示および接続先の切り替えを行います。
 
-### 3.6 承認ボタン処理
+### 3.7 承認ボタン処理
 AIエージェントが実行許可を求める承認ダイアログを検出し、Discord経由で制御します。
 
 **承認キーワード（11種）:**
@@ -89,7 +113,7 @@ Reject, Cancel, Deny
 - Antigravity側のボタンラベルをそのままDiscordボタンに反映
 - ユーザーがクリックしたDiscordボタンのラベルに対応するAntigravity側ボタンを正確にクリック
 
-### 3.7 Smart Safety（破壊的コマンドのブロック）
+### 3.8 Smart Safety（破壊的コマンドのブロック）
 自動承認モードでも以下の危険なコマンドパターンが検出された場合、自動承認をスキップしてDiscordに手動承認を要求します。
 
 **ブロック対象パターン（11種）:**
@@ -98,10 +122,11 @@ rm -rf /,  rm -rf ~,  rm -rf *,  format c:,  del /f /s /q,
 rmdir /s /q,  :(){:|:&};:,  dd if=,  mkfs.,  > /dev/sda,  chmod -R 777 /
 ```
 
-### 3.8 ファイル監視
+### 3.9 ファイル監視
 - プロジェクトルート以下のファイル変更を監視します（環境変数 `WATCH_DIR` で指定可能）。
 - 除外ファイル: `node_modules`, `.git`, `.env`, ログファイルなど。
 - 新規作成 (`add`) または変更 (`change`) があった場合、Discordに通知します。
+- 送信先チャンネルは `DISCORD_FILE_LOG_CHANNEL_ID`（設定済みの場合）または `lastActiveChannel` で決定されます。
 
 ## 4. セキュリティ
 
@@ -121,6 +146,8 @@ rmdir /s /q,  :(){:|:&};:,  dd if=,  mkfs.,  > /dev/sda,  chmod -R 777 /
 | `DISCORD_BOT_TOKEN` | ✅ | Discord Botのトークン |
 | `DISCORD_ALLOWED_USER_ID` | ✅ | 操作を許可するユーザーID |
 | `WATCH_DIR` | ❌ | 監視対象のディレクトリパス（未指定時は対話的に設定） |
+| `DISCORD_CHAT_CHANNEL_ID` | ❌ | チャット通知・起動完了メッセージの送信先チャンネル（未設定時は lastActiveChannel） |
+| `DISCORD_FILE_LOG_CHANNEL_ID` | ❌ | ファイル変更通知の送信先チャンネル（未設定時は lastActiveChannel） |
 | `DISCORD_ACTIVITY_LOG` | ❌ | アクティビティログの出力先パス |
 | `DISCORD_TEST_CHANNEL_ID` | ❌ | テスト用チャンネルID |
 
