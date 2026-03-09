@@ -1,5 +1,7 @@
 node_modules/
 .env
+.env.bot*
+*.lock
 discord_uploads/
 discord_interaction.log
 *.log

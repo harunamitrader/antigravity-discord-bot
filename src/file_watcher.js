@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import chokidar from 'chokidar';
+import readline from 'readline';
 import { AttachmentBuilder } from 'discord.js';
 import { FILE_LOG_CHANNEL_ID } from './config.js';
 import { state } from './state.js';
@@ -26,7 +27,7 @@ export async function ensureWatchDir() {
         return;
     }
 
-    const rl = readline.createInterface({ input, output });
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     console.log('\n--- Watch Directory Setup ---');
 
     while (true) {
@@ -61,20 +62,22 @@ export async function ensureWatchDir() {
     rl.close();
 }
 
+let currentWatcher = null;
+
 export function setupFileWatcher() {
     if (!state.WORKSPACE_ROOT) {
         console.log('File watching is disabled.');
         return;
     }
 
-    const watcher = chokidar.watch(state.WORKSPACE_ROOT, {
+    currentWatcher = chokidar.watch(state.WORKSPACE_ROOT, {
         ignored: [/node_modules/, /\.git/, /discord_interaction\.log$/],
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: true
     });
 
-    watcher.on('all', async (event, filePath) => {
+    currentWatcher.on('all', async (event, filePath) => {
         // 送信先チャンネルの決定: FILE_LOG_CHANNEL_ID > lastActiveChannel
         let channel = null;
         if (FILE_LOG_CHANNEL_ID && _discordClient) {
@@ -105,4 +108,11 @@ export function setupFileWatcher() {
             console.error('File watcher send error:', e.message);
         }
     });
+}
+
+export function closeFileWatcher() {
+    if (currentWatcher) {
+        currentWatcher.close();
+        currentWatcher = null;
+    }
 }

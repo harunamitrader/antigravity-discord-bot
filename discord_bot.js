@@ -29,7 +29,7 @@ import {
     canSendChannel, downloadFile, runStartupLastResponseTest
 } from './src/discord_helpers.js';
 import { isLowConfidenceResponse } from './src/text_processing.js';
-import { ensureWatchDir, setupFileWatcher, setDiscordClient } from './src/file_watcher.js';
+import { ensureWatchDir, setupFileWatcher, setDiscordClient, closeFileWatcher } from './src/file_watcher.js';
 import { monitorAIResponse } from './src/monitor.js';
 
 // --- Discord Client 初期化 ---
@@ -592,9 +592,33 @@ client.on('messageCreate', async message => {
                 console.log('[TEST] No test channel configured. Set --test-channel <channel_id> or DISCORD_TEST_CHANNEL_ID.');
             }
         }
-        client.login(process.env.DISCORD_BOT_TOKEN);
+        await client.login(process.env.DISCORD_BOT_TOKEN);
     } catch (e) {
-        console.error('Fatal Error:', e);
-        process.exit(1);
+        console.error('Fatal Error during login:', e.message);
+        await gracefulShutdown();
     }
 })();
+
+// --- 終了時のクリーンアップ処理 (UV Handle エラー対策) ---
+let isShuttingDown = false;
+async function gracefulShutdown() {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log('\n[SHUTDOWN] Closing connections...');
+
+    closeFileWatcher();
+    if (state.cdpConnection && state.cdpConnection.ws) {
+        try { state.cdpConnection.ws.close(); } catch (e) { }
+    }
+    if (client) {
+        try { client.destroy(); } catch (e) { }
+    }
+
+    // 短い遅延を入れて非同期ハンドラのクローズを待つ
+    setTimeout(() => {
+        process.exit(0);
+    }, 200);
+}
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);

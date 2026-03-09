@@ -1,6 +1,5 @@
 // --- 設定・定数・CLI引数 ---
-import 'dotenv/config';
-
+import './env_loader.js';
 export const PORTS = [9222];
 export const CDP_CALL_TIMEOUT = 30000;
 export const POLLING_INTERVAL = 2000;
