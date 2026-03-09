@@ -22,7 +22,7 @@ import {
     getScreenshot, stopGeneration, startNewChat,
     getCurrentModel, getCurrentTitle, getModelList, switchModel,
     getCurrentMode, switchMode,
-    getLastResponse
+    getLastResponse, getLastResponseAcrossTargets
 } from './src/dom_operations.js';
 import {
     isAuthorizedDiscordUser, sendResponseEmbeds, createInteractionReplyBridge,
@@ -135,7 +135,7 @@ client.on('error', error => {
     console.error('Discord client error:', error);
 });
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}`);
     console.log('起動処理中...（数十秒かかる場合があります）');
 
