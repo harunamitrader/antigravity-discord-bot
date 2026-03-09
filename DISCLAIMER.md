@@ -61,9 +61,9 @@ This software is provided **"AS IS"**, without warranty of any kind. The author 
 
 ## 利用規約への影響について / Terms of Service
 
-本ソフトウェアが対象とするアプリケーション（Antigravity）の内部APIや開発者向け機能（Chrome DevTools Protocol）を使用しています。これらの使用方法は、対象アプリケーションの**利用規約（Terms of Service）に違反する可能性があります**。
+本ソフトウェアは Google Antigravity の非公式な自動化ツールです。Antigravity の内部APIや開発者向け機能（Chrome DevTools Protocol）を使用していますが、これらの使用方法は、対象アプリケーションの**利用規約（Terms of Service）に違反する可能性があります**。
 
-本ソフトウェアの使用により、対象アプリケーションの**アカウントが停止・削除される可能性**があります。著者はこれに関して一切の責任を負いません。
+**規約違反と判断された場合、該当の Google アカウントが予告なく一時停止、または永久的に削除（BAN）されるリスクがあります。** これにより、登録されているすべての Google サービス（Gmail, ドライブ, YouTube 等）へのアクセスが失われる可能性があります。著者はこれに関して一切の責任を負いません。
 
 ---
 
