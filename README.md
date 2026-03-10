@@ -110,7 +110,7 @@ antigravityのAIチャットに以下のプロンプトを入力してくださ�
 
 ### 必要要件
 - Node.js (v18以上推奨)
-- Antigravity (デバッグポート 9223 で起動していること)
+- Antigravity (デバッグポートを指定して起動していること。使用するポート番号は後述の「重要な設定」を参照)
 
 ### インストール手順
 
@@ -144,16 +144,26 @@ antigravityのAIチャットに以下のプロンプトを入力してくださ�
 1. **Antigravityをデバッグモードで起動**
    - Antigravityのショートカットをコピーして作成します。
    - ショートカットを右クリックし、**「プロパティ」** を開きます。
-   - **「リンク先」** の末尾に半角スペースを入れて `--remote-debugging-port=9223` を追加します。
-     - 例: `"C:\...\Antigravity.exe" --remote-debugging-port=9223`
+   - **「リンク先」** の末尾に半角スペースを入れて `--remote-debugging-port=9222` を追加します。
+     - 例: `"C:\...\Antigravity.exe" --remote-debugging-port=9222`
    - 「OK」を押して保存し、そのショートカットからアプリを起動します。
 
    > [!WARNING]
-   > **ポート競合について**: AntigravityのBrowserツールはデフォルトでCDPポート9222を使用します。
-   > Antigravity本体のデバッグも9222で起動すると、BotがAntigravityのメインウィンドウを誤って
-   > 乗っ取る問題が発生します。そのため本Botでは **9223** を使用します。
-   > また、AntigravityのSettings → Browser → Browser CDP Portも9222以外（例: 9333）に
-   > 変更することを推奨します。
+   > **【重要】AntigravityのBrowser CDP Portを必ず変更してください**
+   >
+   > Antigravityのブラウザツール機能（AIがWebページを読み取る機能）は、デフォルトで **ポート9222** を使用してChromeに接続しにいきます。
+   > しかし本Botを使うためにAntigravity自体もデバッグポート9222で動作しているため、**ブラウザツールがAntigravityのメインウィンドウに誤接続し、ウィンドウが乗っ取られる**バグが発生します。
+   >
+   > **これを防ぐには、Antigravityの設定でBrowser CDP Portを9222以外の番号（例: `9333`）に変更してください。**
+   >
+   > **設定手順：** Antigravity → Settings → Browser → **Browser CDP Port** を `9333` に変更
+   >
+   > ![Browser CDP Port 設定画面](docs/images/browser_cdp_port_settings.png)
+   >
+   > | 項目 | 設定値 |
+   > |---|---|
+   > | Antigravityデバッグポート（ショートカット） | `9222`（そのまま） |
+   > | Antigravity設定 > Browser CDP Port | `9333`（← **要変更**） |
 
 2. **ボットを起動**
    ```bash
