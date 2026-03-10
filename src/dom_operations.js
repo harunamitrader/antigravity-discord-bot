@@ -327,7 +327,7 @@ export async function waitForGenerationStart(cdp, timeoutMs = 8000) {
 export async function checkApprovalRequired(preferredCdp = null) {
     let targets = [];
     try {
-        const res = await fetch(`http://127.0.0.1:9222/json/list`);
+        const res = await fetch(`http://127.0.0.1:9223/json/list`);
         targets = await res.json();
     } catch (e) {
         logInteraction('ERROR', '[CHECK_APPROVAL] failed to fetch targets: ' + e.message);

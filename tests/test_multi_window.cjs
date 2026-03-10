@@ -14,7 +14,7 @@ async function getJson(url) {
 }
 
 async function testDiscovery() {
-    const PORTS = [9222, 9000, 9001, 9002, 9003];
+    const PORTS = [9223, 9000, 9001, 9002, 9003];
     const allTargets = [];
 
     for (const port of PORTS) {

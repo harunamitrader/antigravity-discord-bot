@@ -1,6 +1,9 @@
 // --- 設定・定数・CLI引数 ---
 import './env_loader.js';
-export const PORTS = [9222];
+// CDPポート番号（Antigravityデバッグポート）
+// ※ 変更する場合はここだけ直せば全体に反映されます
+// ※ 9222はAntigravityのBrowser CDP Tool機能と競合するため9223を使用
+export const PORTS = [9223];
 export const CDP_CALL_TIMEOUT = 30000;
 export const POLLING_INTERVAL = 2000;
 

@@ -110,7 +110,7 @@ antigravityのAIチャットに以下のプロンプトを入力してくださ�
 
 ### 必要要件
 - Node.js (v18以上推奨)
-- Antigravity (デバッグポート 9222 で起動していること)
+- Antigravity (デバッグポート 9223 で起動していること)
 
 ### インストール手順
 
@@ -144,9 +144,16 @@ antigravityのAIチャットに以下のプロンプトを入力してくださ�
 1. **Antigravityをデバッグモードで起動**
    - Antigravityのショートカットをコピーして作成します。
    - ショートカットを右クリックし、**「プロパティ」** を開きます。
-   - **「リンク先」** の末尾に半角スペースを入れて `--remote-debugging-port=9222` を追加します。
-     - 例: `"C:\...\Antigravity.exe" --remote-debugging-port=9222`
+   - **「リンク先」** の末尾に半角スペースを入れて `--remote-debugging-port=9223` を追加します。
+     - 例: `"C:\...\Antigravity.exe" --remote-debugging-port=9223`
    - 「OK」を押して保存し、そのショートカットからアプリを起動します。
+
+   > [!WARNING]
+   > **ポート競合について**: AntigravityのBrowserツールはデフォルトでCDPポート9222を使用します。
+   > Antigravity本体のデバッグも9222で起動すると、BotがAntigravityのメインウィンドウを誤って
+   > 乗っ取る問題が発生します。そのため本Botでは **9223** を使用します。
+   > また、AntigravityのSettings → Browser → Browser CDP Portも9222以外（例: 9333）に
+   > 変更することを推奨します。
 
 2. **ボットを起動**
    ```bash
