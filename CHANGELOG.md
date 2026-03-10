@@ -2,22 +2,14 @@
 
 ## v1.5.1 (2026-03-11)
 
-### 修正
-- **CDPポートを9222→9223に変更**: AntigravityのBrowser CDP機能がデフォルトでポート9222を使用するため、BotのデバッグポートとAntigravity本体のポートが競合し、メインウィンドウが乗っ取られる問題が確認されました。Bot側の接続先ポートを `9223` に変更することで競合を解消しました。Antigravity起動用ショートカットの引数も `--remote-debugging-port=9223` への更新が必要です。
-
-### 変更されたファイル
-| ファイル | 主な変更 |
-|---|---|
-| `src/config.js` | `PORTS` を `[9222]` → `[9223]` に変更、コメント追加 |
-| `src/dom_operations.js` | ハードコードされていた `9222` を `9223` に変更 |
-| `tests/cdp_utils.js` | `PORTS` を `[9222]` → `[9223]` に変更 |
-| `tests/test_multi_window.cjs` | `PORTS` の先頭を `9222` → `9223` に変更 |
-| `README.md` | ポート番号と競合に関する注記を更新 |
+### ドキュメント更新
+- **Browser CDPポート競合の注意事項を追記**: Antigravityをデバッグモード（ポート9222）で使用しながらブラウザツール機能を使うと、ブラウザツールがAntigravityのメインウィンドウに誤接続し乗っ取られるバグが発生する問題を文書化
+- **対処法を「起動方法」セクションに追加**: AntigravityのSettings → Browser → Browser CDP Portを `9333` 等の別ポートに変更するよう手順と設定値比較表を記載
+- **設定画面のスクリーンショット追加**: `docs/images/browser_cdp_port_settings.png` を追加し、README内に画像を挿入
 
 ---
 
 ## v1.5.0 (2026-03-07)
-
 
 ### 新機能
 - **`/restart` コマンド**: DiscordからBotプロセスを再起動できるようになりました。`start_bot.bat` 経由で起動している場合、exit code `42` を検知し3秒後に自動再起動します
