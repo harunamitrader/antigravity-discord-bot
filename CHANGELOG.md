@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.7.0 (2026-03-26)
+
+### 新機能
+- **定期実行ジョブ（Scheduled Jobs）**: `data/jobs/*.json` に1ジョブ1ファイルでスケジュールを管理する機能を追加
+  - cron式（JST）によるスケジューリング（[node-cron](https://github.com/node-cron/node-cron) 使用）
+  - Chokidar によるファイル監視 — ジョブファイルの追加・変更・削除を即座に反映（Bot再起動不要）
+  - `active: false` でジョブの一時停止が可能
+  - Bot起動時に保存済みジョブを自動復元
+  - 実行時にDiscordチャンネルへ通知を送信し、AIレスポンスをリレー
+- **Antigravity用グローバルスキル同梱**: `.agent/skills/schedule-manager/SKILL.md` を同梱。Antigravityのグローバルスキル（`~/.gemini/antigravity/skills/`）にインストールすることで、AIチャットから自然言語でジョブ管理が可能
+
+### 改善
+- **ファイル監視のクラッシュ耐性**: Chokidar のエラー（Googleドライブ等のネットワークドライブでの障害）でBotプロセスが落ちないよう改善。監視機能だけ停止し、他の機能は正常に動作を継続
+- **WATCH_DIR 無効パスの処理改善**: 存在しないパスが設定されていた場合、`process.exit(1)` せず警告を出して監視機能のみ無効化
+
+### 依存パッケージ追加
+- `node-cron` ^3.0.3 — cron式ベースのタスクスケジューリング
+
+### 変更されたファイル
+| ファイル | 主な変更 |
+|---|---|
+| `src/scheduler.js` | 新規作成: node-cron + Chokidar によるジョブ管理モジュール |
+| `discord_bot.js` | スケジューラ初期化・コールバック登録・シャットダウン処理を追加 |
+| `.agent/skills/schedule-manager/SKILL.md` | 新規作成: Antigravity用ジョブ管理スキル |
+| `package.json` | `node-cron` 依存追加、バージョンを 1.7.0 に更新 |
+| `src/file_watcher.js` | Chokidar エラー耐性追加、WATCH_DIR 無効パスの処理改善 |
+| `README.md` | 定期実行ジョブのセットアップ手順・仕様・cron式ガイドを追加 |
+
+---
+
 ## v1.5.1 (2026-03-11)
 
 ### ドキュメント更新

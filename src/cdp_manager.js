@@ -215,7 +215,7 @@ export async function connectCDP(url, options = {}) {
     });
 
     await call("Runtime.enable", {});
-    console.log(`[CDP] Initialized with ${contexts.length} contexts.`);
+    if (!silent) console.log(`[CDP] Initialized with ${contexts.length} contexts.`);
     if (!silent) logInteraction('CDP', `Connected to target: ${url}`);
     return { ws, call, contexts };
 }

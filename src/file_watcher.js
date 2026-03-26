@@ -21,8 +21,8 @@ export async function ensureWatchDir() {
         }
         state.WORKSPACE_ROOT = process.env.WATCH_DIR;
         if (!fs.existsSync(state.WORKSPACE_ROOT) || !fs.statSync(state.WORKSPACE_ROOT).isDirectory()) {
-            console.error(`Error: WATCH_DIR '${state.WORKSPACE_ROOT}' does not exist or is not a directory.`);
-            process.exit(1);
+            console.warn(`[FILE_WATCHER] WATCH_DIR '${state.WORKSPACE_ROOT}' does not exist or is not a directory. File watching disabled.`);
+            state.WORKSPACE_ROOT = null;
         }
         return;
     }
@@ -70,11 +70,22 @@ export function setupFileWatcher() {
         return;
     }
 
-    currentWatcher = chokidar.watch(state.WORKSPACE_ROOT, {
-        ignored: [/node_modules/, /\.git/, /discord_interaction\.log$/],
-        persistent: true,
-        ignoreInitial: true,
-        awaitWriteFinish: true
+    try {
+        currentWatcher = chokidar.watch(state.WORKSPACE_ROOT, {
+            ignored: [/node_modules/, /\.git/, /discord_interaction\.log$/],
+            persistent: true,
+            ignoreInitial: true,
+            awaitWriteFinish: true
+        });
+    } catch (e) {
+        console.error(`[FILE_WATCHER] Failed to start watcher: ${e.message}. File watching disabled.`);
+        currentWatcher = null;
+        return;
+    }
+
+    currentWatcher.on('error', error => {
+        console.error(`[FILE_WATCHER] Watcher error: ${error.message}. Stopping file watcher.`);
+        closeFileWatcher();
     });
 
     currentWatcher.on('all', async (event, filePath) => {

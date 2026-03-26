@@ -37,3 +37,10 @@ workspace/**
 
 # バックアップファイル
 *.bak
+
+# 一時ファイル
+_tmp/
+
+# ジョブデータ（ユーザー固有）
+data/jobs/*.json
+data/jobs.json

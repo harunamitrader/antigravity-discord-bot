@@ -22,7 +22,7 @@ import {
     getScreenshot, stopGeneration, startNewChat,
     getCurrentModel, getCurrentTitle, getModelList, switchModel,
     getCurrentMode, switchMode,
-    getLastResponse, getLastResponseAcrossTargets
+    getLastResponse
 } from './src/dom_operations.js';
 import {
     isAuthorizedDiscordUser, sendResponseEmbeds, createInteractionReplyBridge,
@@ -31,6 +31,7 @@ import {
 import { isLowConfidenceResponse } from './src/text_processing.js';
 import { ensureWatchDir, setupFileWatcher, setDiscordClient, closeFileWatcher } from './src/file_watcher.js';
 import { monitorAIResponse } from './src/monitor.js';
+import { restoreJobs, stopAllJobs, setScheduleTrigger } from './src/scheduler.js';
 
 // --- Discord Client 初期化 ---
 const client = new Client({
@@ -135,7 +136,7 @@ client.on('error', error => {
     console.error('Discord client error:', error);
 });
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`Logged in as ${client.user.tag}`);
     console.log('起動処理中...（数十秒かかる場合があります）');
 
@@ -166,6 +167,29 @@ client.once('ready', async () => {
     } else {
         console.log('Could not auto-connect to Antigravity on startup.');
     }
+
+    // --- スケジューラ初期化 ---
+    setScheduleTrigger(async (meta) => {
+        const channel = state.lastActiveChannel
+            || (CHAT_CHANNEL_ID ? await client.channels.fetch(CHAT_CHANNEL_ID).catch(() => null) : null);
+
+        const cdp = await ensureCDP();
+        if (!cdp) {
+            if (channel) await channel.send(`⚠️ Job #${meta.number}: CDP not found. Skipping.`);
+            return;
+        }
+
+        const res = await injectMessage(cdp, meta.message);
+        if (res.ok) {
+            if (channel) {
+                const msg = await channel.send(`⏰ Job #${meta.number}: \`${meta.message}\``);
+                monitorAIResponse(msg, cdp);
+            }
+        } else {
+            if (channel) await channel.send(`⚠️ Job #${meta.number}: Failed to inject message.`);
+        }
+    });
+    restoreJobs();
 
     console.log('起動完了');
 
@@ -469,6 +493,9 @@ Manage which VSCode/IDE window to connect to via CDP.
 
 **/restart**
 Restart the bot process. Requires start_bot.bat for auto-restart.
+
+**Scheduled Jobs**
+Managed via \`data/jobs/*.json\` files. Use Antigravity (AI chat) to add/edit/remove jobs.
 `;
             await interaction.editReply(helpText.trim());
             return;
@@ -606,6 +633,7 @@ async function gracefulShutdown() {
     isShuttingDown = true;
     console.log('\n[SHUTDOWN] Closing connections...');
 
+    stopAllJobs();
     closeFileWatcher();
     if (state.cdpConnection && state.cdpConnection.ws) {
         try { state.cdpConnection.ws.close(); } catch (e) { }
