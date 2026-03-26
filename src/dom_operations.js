@@ -595,69 +595,35 @@ export async function getLastResponse(cdp) {
             var cleanedTexts = [];
             for (var bi = 0; bi < responseBlocks.length; bi++) {
                 var block = responseBlocks[bi];
-                var clone = block.cloneNode(true);
-
-                var allEls = Array.from(clone.querySelectorAll('*'));
-                for (var ei = 0; ei < allEls.length; ei++) {
-                    var el = allEls[ei];
-                    if (!el.parentNode) continue;
-                    var elText = (el.innerText || '').trim();
-                    if (!elText) continue;
-                    var isThought = (/^Thought for/.test(elText) && elText.length < 30) || elText === 'Thought Process';
-                    var logHeaders = ['Ran command', 'Ran background command', 'Ran terminal command', 'Analyzed', 'Running command', 'Always run', 'Exit code', 'Error during'];
-                    var isLog = false;
-                    for (var li = 0; li < logHeaders.length; li++) {
-                        if (elText.indexOf(logHeaders[li]) === 0 && elText.length < 30) { isLog = true; break; }
-                    }
-                    if (isThought || isLog) {
-                        var container = el.closest('details') || el.closest('.border') || el.closest('.bg-ide-bg') || el.closest('.rounded') || el.parentElement;
-                        if (container && container.parentNode) {
-                            container.parentNode.replaceChild(document.createTextNode(' '), container);
-                        }
-                    }
+                
+                // 構造ベースの抽出ロジック:
+                // Antigravityの各レスポンスは複数の行（row）で構成される。
+                // テキスト本体は必ず 'leading-relaxed select-text' を持つ div に入っている。
+                // ログやThought、ボタンなどはこの構造を持たないので、これを探すだけでフィルタリングできる。
+                
+                var textRows = Array.from(block.querySelectorAll('.leading-relaxed.select-text'));
+                var blockTextParts = [];
+                
+                for (var tri = 0; tri < textRows.length; tri++) {
+                    var row = textRows[tri];
+                    // クローンして一時的な不要物（Good/Badボタンなど）があれば除去するが、
+                    // 基本的にはこの要素の innerText が正味のコンテンツ。
+                    var clone = row.cloneNode(true);
+                    
+                    // スタイルやボタンなどを念のため除去
+                    var styles = Array.from(clone.querySelectorAll('style'));
+                    for (var si = 0; si < styles.length; si++) styles[si].parentNode.removeChild(styles[si]);
+                    
+                    var btns = Array.from(clone.querySelectorAll('button'));
+                    for (var bti = 0; bti < btns.length; bti++) btns[bti].parentNode.removeChild(btns[bti]);
+                    
+                    var rowText = clone.innerText.trim();
+                    if (rowText) blockTextParts.push(rowText);
                 }
-
-                var styles = Array.from(clone.querySelectorAll('style'));
-                for (var si = 0; si < styles.length; si++) {
-                    if (styles[si].parentNode) styles[si].parentNode.removeChild(styles[si]);
+                
+                if (blockTextParts.length > 0) {
+                    cleanedTexts.push(blockTextParts.join('\n\n'));
                 }
-
-                var btns = Array.from(clone.querySelectorAll('button'));
-                for (var bti = 0; bti < btns.length; bti++) {
-                    var btnText = (btns[bti].innerText || '').trim();
-                    if (btnText === 'Good' || btnText === 'Bad') {
-                        var wrap = btns[bti].closest('.flex');
-                        if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap);
-                        else if (btns[bti].parentNode) btns[bti].parentNode.removeChild(btns[bti]);
-                    }
-                }
-
-                clone.style.cssText = 'position:absolute;left:-9999px;top:0;opacity:0;pointer-events:none;width:800px';
-                document.body.appendChild(clone);
-
-                var undos = Array.from(clone.querySelectorAll('[data-tooltip-id*="undo"], [title*="Undo"]'));
-                for (var ui = 0; ui < undos.length; ui++) {
-                    var cur = undos[ui];
-                    var target = cur.closest('.whitespace-pre-wrap') || cur.parentElement;
-                    var ancestor = cur.parentElement;
-                    while (ancestor && ancestor !== clone) {
-                        try {
-                            var bg = window.getComputedStyle(ancestor).backgroundColor;
-                            if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-                                target = ancestor;
-                                break;
-                            }
-                        } catch (e) { }
-                        ancestor = ancestor.parentElement;
-                    }
-                    if (target && target.parentNode) target.parentNode.replaceChild(document.createTextNode(' '), target);
-                }
-
-                var text = clone.innerText;
-                document.body.removeChild(clone);
-
-                text = text.replace(/Good\s*Bad\s*$/g, '').replace(/\n{3,}/g, '\n\n').trim();
-                if (text) cleanedTexts.push(text);
             }
 
             if (cleanedTexts.length === 0) return { text: '', debug: 'cleanedTexts empty, responseBlocks=' + responseBlocks.length };

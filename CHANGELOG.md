@@ -1,6 +1,22 @@
 # Changelog
 
+## v1.7.1 (2026-03-27)
+
+### バグ修正
+- **`getLastResponse` の抽出ロジックを根本的に刷新** (`src/dom_operations.js`)
+  - **旧ロジック（問題あり）**: レスポンスブロック全体をクローンし、テキストマッチで「Thought for」「Ran command」「Edited」等のノイズ要素を特定・削除していた。`el.closest('.border')` / `el.closest('.rounded')` が広すぎる親要素にマッチしてブロックごと削除されることがあり、本来のAI返答テキストまで消えるバグがあった。また「Copy」ボタンのテキストが残るバグもあった。
+  - **新ロジック（根本解決）**: AntigravityのDOM構造を調査した結果、AIのテキスト本体は必ず `leading-relaxed select-text` クラスを持つ `div` に格納されることが判明。この要素のみをポジティブマッチで直接抽出するよう変更。テキストマッチングによる削除処理は完全に廃止した。
+  - 効果: Thought / ログヘッダー（Edited, Ran command等）/ Copy・Good・Badボタン が構造的に除外され、テキスト抽出の信頼性が大幅に向上。
+
+### 変更されたファイル
+| ファイル | 主な変更 |
+|---|---|
+| `src/dom_operations.js` | `getLastResponse` の抽出ロジックをポジティブマッチング方式に全面刷新 |
+
+---
+
 ## v1.7.0 (2026-03-26)
+
 
 ### 新機能
 - **定期実行ジョブ（Scheduled Jobs）**: `data/jobs/*.json` に1ジョブ1ファイルでスケジュールを管理する機能を追加

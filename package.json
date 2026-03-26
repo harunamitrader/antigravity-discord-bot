@@ -1,6 +1,6 @@
 {
     "name": "antigravity-discord-bot",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "type": "module",
     "description": "Discord bot to control Antigravity (VS Code Fork) via Chrome DevTools Protocol",
     "scripts": {
