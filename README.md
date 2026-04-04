@@ -46,6 +46,8 @@ Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にア
 > v1.2より、AIエージェントが実行する「Run」や「Allow Once」といった承認ボタンを自動でクリックする **「自動承認モード (Auto-approval mode)」** が搭載されました。以下のDiscordコマンドで制御可能です。
 >
 > v1.3では、Discord上のボタンがAntigravity側のボタン名（Run, Allow Onceなど）をそのまま反映するようになりました。また、`rm -rf /` 等の危険なコマンドは自動承認モードでもブロックされ、手動承認が求められます。
+>
+> なお、本Botの自動承認機能はまだ動作が安定しない場合があります。より確実な自動承認を求める場合は、Antigravity拡張機能の **[Antigravity Auto Accept (pesosz)](https://open-vsx.org/extension/pesosz/antigravity-auto-accept)** の利用をおすすめします。v1.7.2以降はデバッグポートが `9500` に変更されているため、拡張機能のコントロールパネルでCDPポートを `9500` に設定してください。
 
 ## おすすめの導入方法
 
