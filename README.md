@@ -12,6 +12,8 @@
 
 </div>
 
+![Antigravity Discord Bot 概要図](docs/antigravity-discord-bot.png)
+
 このツールはAntigravity (VS Code Fork) を Discord から操作するためのボットです。
 Chrome DevTools Protocol (CDP) を使用して Antigravity の内部状態にアクセスし、メッセージの送信や操作の自動化を行います。
 > ※ 本ツールは公式のAntigravityとは無関係の非公式ツールです。
