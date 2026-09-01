@@ -1,5 +1,6 @@
 // --- DOM操作（Antigravityの制御） ---
 import { SELECTORS } from '../selectors.js';
+import { PORTS } from './config.js';
 import { logInteraction } from './logging.js';
 import {
     sanitizeAssistantMarkdown, sanitizeAssistantResponse, extractNarrativeBody,
@@ -212,9 +213,19 @@ export async function injectMessage(cdp, text) {
 
         function getSnapshot(editor) {
             return {
-                messageCount: document.querySelectorAll('[data-message-role]').length,
+                messageCount: document.querySelectorAll('[data-message-role], [role="article"]').length,
+                assistantResponseCount: document.querySelectorAll('.leading-relaxed.select-text').length,
                 editorChars: ((editor && editor.innerText) || '').trim().length,
                 cancelVisible: Boolean(document.querySelector('[data-tooltip-id="input-send-button-cancel-tooltip"]'))
+            };
+        }
+
+        function successfulSubmission(method, before, after) {
+            return {
+                ok: true,
+                method,
+                generationObserved: Boolean(after.cancelVisible),
+                responseObserved: after.assistantResponseCount > before.assistantResponseCount
             };
         }
 
@@ -256,21 +267,40 @@ export async function injectMessage(cdp, text) {
             if (submit) { submit.click(); method = 'click'; }
             else { pressEnter(editor); }
 
+            let submissionConfirmed = false;
+            let latestAfter = before;
             for (let i = 0; i < 8; i++) {
                 await new Promise(r => setTimeout(r, 300));
                 const after = getSnapshot(editor);
+                latestAfter = after;
                 const submitted = after.cancelVisible || after.messageCount > before.messageCount || (before.editorChars > 0 && after.editorChars === 0);
-                if (submitted) return { ok: true, method };
+                if (submitted) {
+                    submissionConfirmed = true;
+                    if (after.cancelVisible || after.assistantResponseCount > before.assistantResponseCount) {
+                        return successfulSubmission(method, before, after);
+                    }
+                }
             }
+
+            if (submissionConfirmed) return successfulSubmission(method, before, latestAfter);
 
             if (method !== 'enter') {
                 pressEnter(editor);
+                submissionConfirmed = false;
+                latestAfter = before;
                 for (let i = 0; i < 6; i++) {
                     await new Promise(r => setTimeout(r, 300));
                     const after = getSnapshot(editor);
+                    latestAfter = after;
                     const submitted = after.cancelVisible || after.messageCount > before.messageCount || (before.editorChars > 0 && after.editorChars === 0);
-                    if (submitted) return { ok: true, method: 'enter' };
+                    if (submitted) {
+                        submissionConfirmed = true;
+                        if (after.cancelVisible || after.assistantResponseCount > before.assistantResponseCount) {
+                            return successfulSubmission('enter', before, after);
+                        }
+                    }
                 }
+                if (submissionConfirmed) return successfulSubmission('enter', before, latestAfter);
             }
             return { ok: false, error: 'submit_not_confirmed' };
         }
@@ -326,11 +356,23 @@ export async function waitForGenerationStart(cdp, timeoutMs = 8000) {
 
 export async function checkApprovalRequired(preferredCdp = null) {
     let targets = [];
-    try {
-        const res = await fetch(`http://127.0.0.1:9222/json/list`);
-        targets = await res.json();
-    } catch (e) {
-        logInteraction('ERROR', '[CHECK_APPROVAL] failed to fetch targets: ' + e.message);
+    let fetchError = null;
+    for (const port of PORTS) {
+        try {
+            const res = await fetch(`http://127.0.0.1:${port}/json/list`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const list = await res.json();
+            if (Array.isArray(list)) {
+                targets = list;
+                break;
+            }
+        } catch (e) {
+            fetchError = e;
+        }
+    }
+
+    if (targets.length === 0) {
+        logInteraction('ERROR', `[CHECK_APPROVAL] failed to fetch targets on ports ${PORTS.join(',')}: ${fetchError?.message || 'empty target list'}`);
         if (preferredCdp) targets = [{ webSocketDebuggerUrl: preferredCdp.ws.url, title: 'current' }];
         else return null;
     }
@@ -575,7 +617,10 @@ export async function getLastResponse(cdp) {
 
     const EXP = '(' + function (RAW_LIMIT, REPLY_LIMIT) {
         try {
-            var msgContainer = document.querySelector('.relative.flex.flex-col.gap-y-3.px-4');
+            var messageContainers = Array.from(document.querySelectorAll('.relative.flex.flex-col.gap-y-3'));
+            var msgContainer = messageContainers.filter(function (container) {
+                return container.querySelector('.leading-relaxed.select-text');
+            }).pop();
             if (!msgContainer) return { text: '', debug: 'msgContainer not found' };
 
             var blocks = Array.from(msgContainer.children);

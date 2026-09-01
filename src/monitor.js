@@ -6,17 +6,15 @@ import { state } from './state.js';
 import { logInteraction } from './logging.js';
 import { safeReplyTarget, sendResponseEmbeds } from './discord_helpers.js';
 import { checkApprovalRequired, clickApproval, checkIsGenerating, getLastResponse } from './dom_operations.js';
-import { evaluateGenerationActivity } from './monitor_activity.js';
+import { evaluateGenerationActivity, submissionIndicatesActivity } from './monitor_activity.js';
 
-export async function monitorAIResponse(originalMessage, cdp) {
+export async function monitorAIResponse(originalMessage, cdp, submission = null) {
     if (state.isGenerating) return;
     state.isGenerating = true;
     let stableCount = 0;
-    let activityDetected = false;
+    let activityDetected = submissionIndicatesActivity(submission);
     state.lastApprovalMessage = null;
     logInteraction('ACTION', 'Monitoring AI response.');
-
-    await new Promise(r => setTimeout(r, 3000));
 
     const startTime = Date.now();
     const MONITOR_TIMEOUT = 30 * 60 * 1000; // 30分
@@ -243,5 +241,5 @@ export async function monitorAIResponse(originalMessage, cdp) {
         }
     };
 
-    setTimeout(poll, POLLING_INTERVAL);
+    setTimeout(poll, 0);
 }

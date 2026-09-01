@@ -141,6 +141,12 @@ export async function discoverCDP() {
         ));
     }
 
+    // Conversation titles can replace the generic "Antigravity" window title.
+    // Port 9500 is dedicated to this app, so keep any remaining page as a final fallback.
+    if (!target) {
+        target = await pickBestTarget(allTargets.filter(t => t.type === 'page'));
+    }
+
     if (target) {
         const lowPri = isLowPriorityTarget(target);
         console.log(`\n========================================`);

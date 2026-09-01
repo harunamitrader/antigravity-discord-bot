@@ -3,8 +3,16 @@ import test from 'node:test';
 
 const {
     GENERATION_START_TIMEOUT,
-    evaluateGenerationActivity
+    evaluateGenerationActivity,
+    submissionIndicatesActivity
 } = await import('../src/monitor_activity.js');
+
+test('only observed generation or a new response counts as submission activity', () => {
+    assert.equal(submissionIndicatesActivity(null), false);
+    assert.equal(submissionIndicatesActivity({ editorCleared: true }), false);
+    assert.equal(submissionIndicatesActivity({ generationObserved: true }), true);
+    assert.equal(submissionIndicatesActivity({ responseObserved: true }), true);
+});
 
 test('an unchanged idle session cannot count toward response completion', () => {
     const result = evaluateGenerationActivity({
