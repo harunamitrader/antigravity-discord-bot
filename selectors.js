@@ -1,7 +1,7 @@
 
 export const SELECTORS = {
-    // チャット入力欄: ターミナルの入力欄を除外
-    CHAT_INPUT: 'div[role="textbox"]:not(.xterm-helper-textarea)',
+    // チャット入力欄: 新旧Antigravity UIに対応し、ターミナルの入力欄を除外
+    CHAT_INPUT: 'div[role="textbox"]:not(.xterm-helper-textarea), div[role="combobox"][aria-label="Message input"][contenteditable="true"]',
 
     // 送信ボタン: SVG アイコンのクラス名で判定
     SUBMIT_BUTTON_CONTAINER: 'button',

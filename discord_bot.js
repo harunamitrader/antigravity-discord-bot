@@ -183,7 +183,7 @@ client.once('clientReady', async () => {
         if (res.ok) {
             if (channel) {
                 const msg = await channel.send(`⏰ Job #${meta.number}: \`${meta.message}\``);
-                monitorAIResponse(msg, cdp);
+                monitorAIResponse(msg, cdp, res);
             }
         } else {
             if (channel) await channel.send(`⚠️ Job #${meta.number}: Failed to inject message.`);
@@ -594,7 +594,7 @@ client.on('messageCreate', async message => {
         } catch (e) {
             console.error('Failed to react to message:', e);
         }
-        monitorAIResponse(message, cdp);
+        monitorAIResponse(message, cdp, res);
     } else {
         if (res.error) message.reply(`Error: ${res.error}`);
     }
