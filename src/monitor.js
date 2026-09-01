@@ -6,12 +6,13 @@ import { state } from './state.js';
 import { logInteraction } from './logging.js';
 import { safeReplyTarget, sendResponseEmbeds } from './discord_helpers.js';
 import { checkApprovalRequired, clickApproval, checkIsGenerating, getLastResponse } from './dom_operations.js';
+import { evaluateGenerationActivity } from './monitor_activity.js';
 
 export async function monitorAIResponse(originalMessage, cdp) {
     if (state.isGenerating) return;
     state.isGenerating = true;
     let stableCount = 0;
-    let generationStarted = false;
+    let activityDetected = false;
     state.lastApprovalMessage = null;
     logInteraction('ACTION', 'Monitoring AI response.');
 
@@ -148,11 +149,39 @@ export async function monitorAIResponse(originalMessage, cdp) {
             }
 
             const generating = await checkIsGenerating(cdp);
-            if (generating && !generationStarted) {
-                generationStarted = true;
+            const activity = evaluateGenerationActivity({
+                activityDetected,
+                generating,
+                elapsedMs: Date.now() - startTime
+            });
+            activityDetected = activity.activityDetected;
+
+            if (activity.startedNow) {
                 logInteraction('generating', 'AI response generation started.');
             }
+
+            if (activity.abortForNoGeneration) {
+                state.isGenerating = false;
+                logInteraction('NO_RESPONSE', 'No new generation signal detected; existing session response was not relayed.');
+                try {
+                    await safeReplyTarget(
+                        originalMessage,
+                        { content: '新しい生成を確認できなかったため、既存セッションの回答は送付しませんでした。必要なら `!lr` で最新回答を手動取得してください。' },
+                        { preferReply: true }
+                    );
+                } catch (replyErr) {
+                    logInteraction('ERROR', `Failed to send no-generation notification: ${replyErr?.message || String(replyErr)}`);
+                }
+                return;
+            }
+
             if (!generating) {
+                // Only a generation triggered by this Discord message may complete
+                // the monitor and relay an assistant response.
+                if (!activity.canCountStablePoll) {
+                    setTimeout(poll, POLLING_INTERVAL);
+                    return;
+                }
                 stableCount++;
                 if (stableCount >= 3) {
                     state.isGenerating = false;
